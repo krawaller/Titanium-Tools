@@ -1,6 +1,6 @@
 Ti.include('cross.js');
 
-// Register this context under the name "app"
+// Register this context under the name "demo"
 // The following function augments the passed object with a "call" function
 K.reg(this, 'demo');
 // Now this context can call other contexts, as well as being called.

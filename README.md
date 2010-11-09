@@ -79,10 +79,15 @@ The library tries to be smart, so your "method" can point to a plain variable, a
 	// Some different types we'll fetch from tools/cross/demo.js:
 	var val = 7, // Plain variable
 		fn = function(toAdd){ return 2 + toAdd; }, // Directly returning function
-		deferred = function(toAdd, callback){ setTimeout(function(){ callback(toAdd + 3); }, 1000); } // Deferred function returning through callback
+		deferred = function(toAdd, callback){ 
+			setTimeout(function(){ callback(toAdd + 3); }, 1000);  // Deferred function returning through callback
+		};
 		
 		
 	/* demo.js */
+	Ti.include('cross.js');
+	K.reg(this, 'demo');
+	
 	// Let's try calling "app", since we registered that context in app.js
 	call('app', 'val',      null, function(val){ Ti.API.log('val', val);      }); // Should log [VAL] 7
 	call('app', 'fn',       [1],  function(val){ Ti.API.log('fn', val);       }); // Should log [FN] 3
@@ -91,6 +96,9 @@ The library tries to be smart, so your "method" can point to a plain variable, a
 You can also bind to an object instead of the global context like this:
 
 	/* app.js */
+	Ti.include('tools/cross/cross.js');
+	K.reg(this, 'app');
+	
 	// Create a class to test registering of instances
 	var MyClass = (function(){
 		function MyClass(val){
@@ -106,7 +114,13 @@ You can also bind to an object instead of the global context like this:
 	var my = new MyClass(3);
 	K.reg(my, 'myclass');
 	
+	
 	/* demo.js */
+	Ti.include('cross.js');
+
+	// Register this context under the name "demo"
+	K.reg(this, 'demo');
+	
 	// Let's try calling the myclass instance in app.js
 	call('myclass', 'val',       function(p){ Ti.API.log('myclass val', p); }); // Should log [MYCLASS VAL] 3
 	call('myclass', 'plus', [1], function(p){ Ti.API.log('myclass plus',  p); }); // Should log [MYCLASS PLUS] 4

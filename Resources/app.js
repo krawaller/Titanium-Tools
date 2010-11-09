@@ -40,19 +40,22 @@ K.reg(this, 'app');
 // Some different types we'll fetch from tools/cross/demo.js:
 var val = 7, // Plain variable
 	fn = function(toAdd){ return 2 + toAdd; }, // Directly returning function
-	deferred = function(toAdd, callback){ setTimeout(function(){ callback(toAdd + 3); }, 1000); } // Deferred function returning through callback
+	deferred = function(toAdd, callback){ 
+		setTimeout(function(){ callback(toAdd + 3); }, 1000); // Deferred function returning through callback
+	},
 
-// Create a class to test registering of instances
-var MyClass = (function(){
-	function MyClass(val){
-		this.val = val;
-	};
-	MyClass.prototype = {
-		plus: function(a){ return this.val + a; }
-	};
-	return MyClass;
-})();
+	// Create a class to test registering of instances
+	MyClass = (function(){
+		function MyClass(val){
+			this.val = val;
+		};
+		MyClass.prototype = {
+			plus: function(a){ return this.val + a; }
+		};
+		return MyClass;
+	})(),
 
-// Create an instance and register it to show that we can bind to objects too
-var my = new MyClass(3);
+	// Create an instance and register it to show that we can bind to objects too
+	my = new MyClass(3);
+	
 K.reg(my, 'myclass');
