@@ -1,64 +1,58 @@
-// this sets the background color of the master UIView (when there are no windows/tab groups on it)
-Titanium.UI.setBackgroundColor('#000');
+Ti.UI.setBackgroundColor('#000');
 
-// create tab group
-var tabGroup = Titanium.UI.createTabGroup();
-
-
-//
-// create base UI tab and root window
-//
-var win1 = Titanium.UI.createWindow({  
-    title:'Tab 1',
-    backgroundColor:'#fff'
+var tabGroup = Ti.UI.createTabGroup();
+var win = Ti.UI.createWindow({  
+    title: 'Titanium Tools',
+    backgroundColor: '#fff',
+	tabBarHidden: true
 });
-var tab1 = Titanium.UI.createTab({  
-    icon:'KS_nav_views.png',
-    title:'Tab 1',
-    window:win1
+var tab = Ti.UI.createTab({  
+    icon: null,
+    title: '',
+    window: win
 });
 
-var label1 = Titanium.UI.createLabel({
-	color:'#999',
-	text:'I am Window 1',
-	font:{fontSize:20,fontFamily:'Helvetica Neue'},
-	textAlign:'center',
-	width:'auto'
+var tableView = Ti.UI.createTableView({
+	data: [{
+		title: 'Cross contexts',
+		file: 'tools/cross/demo.js'
+	}]
 });
-
-win1.add(label1);
-
-//
-// create controls tab and root window
-//
-var win2 = Titanium.UI.createWindow({  
-    title:'Tab 2',
-    backgroundColor:'#fff'
+tableView.addEventListener('click', function(e){
+	tab.open(Ti.UI.createWindow({
+		url: e.rowData.file,
+		title: e.rowData.title
+	}));
 });
-var tab2 = Titanium.UI.createTab({  
-    icon:'KS_nav_ui.png',
-    title:'Tab 2',
-    window:win2
-});
+win.add(tableView);
 
-var label2 = Titanium.UI.createLabel({
-	color:'#999',
-	text:'I am Window 2',
-	font:{fontSize:20,fontFamily:'Helvetica Neue'},
-	textAlign:'center',
-	width:'auto'
-});
-
-win2.add(label2);
-
-
-
-//
-//  add tabs
-//
-tabGroup.addTab(tab1);  
-tabGroup.addTab(tab2);  
-
-
-// open tab group
+tabGroup.addTab(tab);  
 tabGroup.open();
+
+
+// === Cross context demo
+Ti.include('tools/cross/cross.js');
+
+// Register this context under the name "app"
+// The following function augments the passed object with a "call" function
+K.reg(this, 'app');
+
+// Some different types we'll fetch from tools/cross/demo.js:
+var val = 7, // Plain variable
+	fn = function(toAdd){ return 2 + toAdd; }, // Directly returning function
+	deferred = function(toAdd, callback){ setTimeout(function(){ callback(toAdd + 3); }, 1000); } // Deferred function returning through callback
+
+// Create a class to test registering of instances
+var MyClass = (function(){
+	function MyClass(val){
+		this.val = val;
+	};
+	MyClass.prototype = {
+		plus: function(a){ return this.val + a; }
+	};
+	return MyClass;
+})();
+
+// Create an instance and register it to show that we can bind to objects too
+var my = new MyClass(3);
+K.reg(my, 'myclass');
