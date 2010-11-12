@@ -16,6 +16,10 @@ var tableView = Ti.UI.createTableView({
 	data: [{
 		title: 'Cross contexts',
 		file: 'tools/cross/demo.js'
+	},
+	{
+	    title: 'Live styles',
+	    file: 'tools/livestyle/demo.js'
 	}]
 });
 tableView.addEventListener('click', function(e){
@@ -59,3 +63,8 @@ var val = 7, // Plain variable
 	my = new MyClass(3);
 	
 K.reg(my, 'myclass');
+
+// Livestyle
+Ti.App.Properties.setBool('_watching', false);
+Ti.include('tools/livestyle/livestyle.js');
+K.watch(win);
