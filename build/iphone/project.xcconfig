@@ -1,4 +1,4 @@
-TI_VERSION=1.4.1.1
+TI_VERSION=1.4.2
 TI_SDK_DIR=/Library/Application Support/Titanium/mobilesdk/osx/$(TI_VERSION)/iphone
 TI_APPID=se.krawaller.kra
 OTHER_LDFLAGS[sdk=iphoneos4*]=$(inherited) -weak_framework iAd

@@ -1,4 +1,4 @@
-Ti.UI.setBackgroundColor('#000');
+Ti.UI.setBackgroundColor('#fff');
 
 var tabGroup = Ti.UI.createTabGroup();
 var win = Ti.UI.createWindow({  
@@ -68,3 +68,33 @@ K.reg(my, 'myclass');
 Ti.App.Properties.setBool('_watching', false);
 Ti.include('tools/livestyle/livestyle.js');
 K.watch(win);
+
+
+// Force load
+function forceLoad(){
+	Ti.UI.createActivityIndicator();
+	Ti.UI.createAlertDialog();
+	Ti.UI.createAnimation();
+	Ti.UI.createButton();
+	Ti.UI.createButtonBar();
+	Ti.UI.createCoverFlowView();
+	Ti.UI.createEmailDialog();
+	Ti.UI.createImageView();
+	Ti.UI.createLabel();
+	Ti.UI.createOptionDialog();
+	Ti.UI.createScrollableView();
+	Ti.UI.createSlider();
+	Ti.UI.createSwitch();
+	Ti.UI.createTab();
+	Ti.UI.createTabGroup();
+	Ti.UI.createTabbedBar();
+	Ti.UI.createTableView();
+	Ti.UI.createTableViewRow();
+	Ti.UI.createTableViewSection();
+	Ti.UI.createTextArea();
+	Ti.UI.createTextField();
+	Ti.UI.createToolbar();
+	Ti.UI.createView();
+	Ti.UI.createWebView();
+	Ti.UI.createWindow();
+};

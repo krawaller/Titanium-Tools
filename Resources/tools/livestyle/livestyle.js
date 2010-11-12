@@ -1,5 +1,10 @@
 Ti.API.log('including livestyle');
 
+var rtrim = /^\s+|\s+$/g;
+String.prototype.trim = function(){
+    return this.replace(rtrim, "");  
+};
+
 (function(d){var a,c={},f=0,b=this,e=Object.prototype.toString;a=d.K=d.K||{};a.isFunc=function(g){return e.call(g)==="[object Function]"};a.reg=function(i,g){var h="_"+g;i.call=function(j,m,k,l){if(a.isFunc(k)&&typeof l==="undefined"){l=k;k=null}f++;c[f]=l;Ti.App.fireEvent("_"+j,{method:m,cid:l?f:false,source:g,data:k})};Ti.App.addEventListener(h,function(q){if(!q.method){if(c[q.cid]){c[q.cid](q.data);delete c[q.cid]}}else{var l=0,j=q.method.split("."),k,s,r=i,p=[],n=function(m){if(q.cid){Ti.App.fireEvent(q.source,{cid:q.cid,data:m,source:h})}};while((k=r[j[l++]])&&(r=k)&&p.push(r)){}(r&&(a.isFunc(r)))?((typeof(s=r.apply?r.apply((p[p.length-2]||i),((k=(q.data?(q.data instanceof Array?q.data:[q.data]):[]))&&k.push(n)&&k.push(q)&&k)):r(q.data[0],q.data[1],q.data[2]))!=="undefined")&&n(s)):n(r)}})}})(this);
 (function(global){
 var K = global.K = global.K || {};
@@ -35,7 +40,10 @@ function appendTo(el){
 	return this;
 }
 
-var els = K._els = K._els || [];
+var thisWindow = Ti.UI.currentWindow || win || {};
+thisWindow._type = 'window';
+
+var els = K._els = K._els || [thisWindow];
 var styleCache = {};
 var getStyle = K.getStyle = function(opts, type){
     if(typeof opts === 'string'){ opts = { className: opts }; }
@@ -96,14 +104,20 @@ K.watch = function(win){
     };
     K.reg(Watcher, '_watcher');
     
+    Ti.API.log('init socket');
+    
     var socket = Titanium.Network.createTCPSocket({
-    	hostName: Titanium.Network.INADDR_ANY, 
+    	hostName: "192.168.10.236", 
     	port: 8128, 
     	mode: Titanium.Network.READ_WRITE_MODE
     });
+    
+    Ti.API.log('socket', socket.isValid);
 
     socket.addEventListener('read', function(e) {
+        
         var t = e.data.text;
+        Ti.API.log('read', t);
         var o = JSON.parse(t);
         switch(o.action){
             case 'filechange':
@@ -121,6 +135,8 @@ K.watch = function(win){
     });
 
     socket.connect();
+    Ti.API.log('connect', socket.isValid);
+    
 };
 
 var watching = {};
@@ -188,7 +204,7 @@ var WHITESPACE_CHARACTERS = /\t|\n|\r/g,
 
 function buildSelectorTree(text) {
 	var rules = [], ruletext, rule,
-	    match, selector, proptext, splitprop, properties;
+	    match, selector, proptext, splitprop, properties, sidx, prop, val;
 
 	// Tabs, Returns
 	text = text.replace(WHITESPACE_CHARACTERS, EMPTY_STRING);
@@ -210,12 +226,14 @@ function buildSelectorTree(text) {
 				properties = [];
 
 				forEach(proptext, function (i, x) {
-					splitprop = x.split(":");
-
-					if (splitprop.length && splitprop[1]) {
+				    sidx = x.indexOf(":");
+                    prop = x.substring(0, sidx).trim();
+                    val = x.substring(sidx+1).trim();
+                    
+					if (prop) {
 						properties.push({
-							property : splitprop[0],
-							value : splitprop[1]
+							property : prop,
+							value : val
 						});
 					}
 				});

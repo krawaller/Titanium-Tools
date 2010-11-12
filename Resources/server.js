@@ -85,4 +85,4 @@ var server = net.createServer(function (stream) {
     fs.unwatchFile('livestyle.js');
   });
 });
-server.listen(8128, 'localhost');
+server.listen(8128);
