@@ -7,8 +7,8 @@
 
 K = global.K = global.K || {};
 K.isFunc = function(o){ return toString.call(o) === "[object Function]"; };
-K.reg = function(obj, label) {
-	var lb = '_' + label;
+K.reg = function(obj, reglabel) {
+	var lb = '_' + reglabel;
 	
 	obj.call = function(label, method, data, callback) {
 		if(K.isFunc(data) && typeof callback === 'undefined'){
@@ -20,7 +20,7 @@ K.reg = function(obj, label) {
 		Ti.App.fireEvent('_' + label, {
 			method: method,
 			cid: callback ? cid : false,
-			source: lb,
+			source: reglabel,
 			data: data
 		});
 	};
@@ -43,7 +43,7 @@ K.reg = function(obj, label) {
 			((typeof (val = 
 				o.apply ? o.apply(
 					(os[os.length - 2] || obj), 
-					((tmp = (e.data ? (e.data instanceof Array ? e.data : [e.data]) : [])) && tmp.push(fn) && tmp)
+					((tmp = (e.data ? (e.data instanceof Array ? e.data : [e.data]) : [])) && tmp.push(fn) && tmp.push(e) && tmp)
 				) : o(e.data[0], e.data[1], e.data[2])
 			) !== 'undefined') && fn(val))   : fn(o);
 		}	
