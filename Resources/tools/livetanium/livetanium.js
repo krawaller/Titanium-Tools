@@ -12,7 +12,8 @@ String.prototype.trim = function(){
     return this.replace(rtrim, "");  
 };
 
-(function(d){var a,c={},f=0,b=this,e=Object.prototype.toString;a=d.K=d.K||{};a.isFunc=function(g){return e.call(g)==="[object Function]"};a.reg=function(i,g){var h="_"+g;i.call=function(j,m,k,l){if(a.isFunc(k)&&typeof l==="undefined"){l=k;k=null}f++;c[f]=l;Ti.App.fireEvent("_"+j,{method:m,cid:l?f:false,source:g,data:k})};Ti.App.addEventListener(h,function(q){if(!q.method){if(c[q.cid]){c[q.cid](q.data);delete c[q.cid]}}else{var l=0,j=q.method.split("."),k,s,r=i,p=[],n=function(m){if(q.cid){Ti.App.fireEvent(q.source,{cid:q.cid,data:m,source:h})}};while((k=r[j[l++]])&&(r=k)&&p.push(r)){}(r&&(a.isFunc(r)))?((typeof(s=r.apply?r.apply((p[p.length-2]||i),((k=(q.data?(q.data instanceof Array?q.data:[q.data]):[]))&&k.push(n)&&k.push(q)&&k)):r(q.data[0],q.data[1],q.data[2]))!=="undefined")&&n(s)):n(r)}})}})(this);
+(function(global){var K,callbacks={},cid=0,me=this,toString=Object.prototype.toString;K=global.K=global.K||{};K.isFunc=function(o){return toString.call(o)==="[object Function]";};K.reg=function(obj,reglabel){var lb='_'+reglabel;obj.call=function(label,method,data,callback){if(K.isFunc(data)&&typeof callback==='undefined'){callback=data;data=null;} cid++;callbacks[cid]=callback;Ti.App.fireEvent('_'+label,{method:method,cid:callback?cid:false,source:reglabel,data:data});};Ti.App.addEventListener(lb,function(e){if(!e.method){if(callbacks[e.cid]){callbacks[e.cid](e.data);delete callbacks[e.cid];}}else{var i=0,m=e.method.split("."),tmp,val,o=obj,os=[],fn=function(val){if(e.cid){Ti.App.fireEvent(e.source,{cid:e.cid,data:val,source:lb});}};while((tmp=o[m[i++]])&&(o=tmp)&&os.push(o));(o&&(K.isFunc(o)))?((typeof(val=o.apply?o.apply((os[os.length-2]||obj),((tmp=(e.data?(e.data instanceof Array?e.data:[e.data]): []))&&tmp.push(fn)&&tmp.push(e)&&tmp)):o(e.data[0],e.data[1],e.data[2]))!=='undefined')&&fn(val)):fn(o);}});};})(this);
+
 (function(global){
 var K = global.K = global.K || {};
 
@@ -55,7 +56,7 @@ function appendTo(el){
 	return this;
 }
 
-var thisWindow = Ti.UI.currentWindow || win || {};
+var thisWindow = (Ti.UI.currentWindow || win) || {};
 thisWindow._type = 'window';
 
 var els = K._els = K._els || [thisWindow];
@@ -73,16 +74,17 @@ var getStyle = K.getStyle = function(opts, type){
 				}
 			}
 		}
-		styleCache[hash] = extend({}, elStyle);
+		styleCache[hash] = elStyle;
 	}
-	return elStyle;
+	return extend({}, elStyle);
 };
 
 ['window', 'view', 'tableView', 'imageView', 'label', 'tableViewSection', 'tableViewRow', 'buttonBar', 'button', 'tabbedBar', 'webView', 'scrollView', 'activityIndicator', 'textField', 'toolbar', 'searchBar', 'tab', 'picker']
 .forEach(function(type){
     var func = type.replace(rrep, rfunc);
     K[func] = function(opts){
-	    var el = Ti.UI[func](extend(getStyle(opts, type), opts));
+        var o = extend(getStyle(opts, type), opts);
+	    var el = Ti.UI[func](o);
 	    el.on = on;
 	    el.appendTo = appendTo;
 	    el._type = type;
@@ -92,9 +94,10 @@ var getStyle = K.getStyle = function(opts, type){
 });
 
 K.refreshStyles = function(styleString){
-    K.style(null, styleString);
-    
-    styleCache = {}; 
+    if(styleString){
+        K.style(null, styleString);
+        styleCache = {};
+    } 
     els.forEach(function(el){
         var s = K.getStyle(el, el._type);
         for(var p in s){
@@ -132,19 +135,36 @@ K.watch = function(win){
     socket.addEventListener('read', function(e) {
         
         var t = e.data.text;
-        Ti.API.log('read', t);
+        //Ti.API.log('read', t);
         var o = JSON.parse(t);
         switch(o.action){
             case 'filechange':
                 Watcher.call(watchers[o.file], 'update', [o.content]);
                 break;
+                
+            case 'files':
+                //Ti.API.log('oooh', o.files);
+                o.files.forEach(function(f, i){
+                    var name = f.name.replace(/\.\//, function($0){ return '';  }).replace(/\//g, '-'),
+                        path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
+                        h = Ti.Filesystem.getFile(path, name);
+                        
+                    //Ti.API.log('writing to', h.nativePath)
+                    h.write(f.content);
+                });
+                
+                
+                //Ti.API.log(['pa', path, name, h.nativePath]);
+                //var w = Ti.UI.createWindow({ url: h.nativePath });
+                //(Ti.UI.currentTab || tab).open(w);
+                break;
         }
     });
 
     // Cleanup
-    (win || Ti.UI.currentWindow).addEventListener('close', function(e) {
+    (win || Ti.UI.currentWindow).addEventListener('close', function(e) {
     	if (socket.isValid) {
-    	    Ti.API.log('close socket')
+    	    Ti.API.log('close socket');
     		socket.close();
     	}
     });
@@ -170,14 +190,19 @@ K.style = function(file, str){
     
     var selectors;
     try {
-        str = str || Titanium.Filesystem.getFile(Titanium.Filesystem.resourcesDirectory, file).read().text;
+        var h = file && Ti.Filesystem.getFile(Ti.Filesystem.tempDirectory, file.substring(1).replace(/\//g, '-')),
+            tmp = h && h.exists && (h.read() || {}).text;
+            
+        str = tmp || str || Ti.Filesystem.getFile(Titanium.Filesystem.resourcesDirectory, file).read().text;
         selectors = buildSelectorTree(str);
         selectors.forEach(function(sel){
-            var obj = styles[sel.selector] = styles[sel.selector] || {};
+            var obj = styles[sel.selector] = styles[sel.selector] || {};
             sel.properties.forEach(function(prop){
                 obj[prop.property] = prop.value;
             });
         });
+        
+        K.refreshStyles();
     } catch(e){ Ti.API.log('error', e); }
 };
 

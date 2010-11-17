@@ -1,5 +1,7 @@
 Ti.UI.setBackgroundColor('#fff');
 
+
+
 var tabGroup = Ti.UI.createTabGroup();
 var win = Ti.UI.createWindow({  
     title: 'Titanium Tools',
@@ -20,10 +22,14 @@ var tableView = Ti.UI.createTableView({
 	{
 	    title: 'Live styles',
 	    file: 'tools/livestyle/demo.js'
+	},
+	{
+	    title: 'Livetanium',
+	    file: 'tools/livetanium/demo.js'
 	}]
 });
 tableView.addEventListener('click', function(e){
-	tab.open(Ti.UI.createWindow({
+	tab.open(K.createWindow({
 		url: e.rowData.file,
 		title: e.rowData.title
 	}));
@@ -36,6 +42,12 @@ tabGroup.open();
 
 // === Cross context demo
 Ti.include('tools/cross/cross.js');
+
+// Livestyle
+Ti.App.Properties.setBool('_watching', false);
+Ti.include('tools/livetanium/livetanium.js');
+K.watch(win);
+
 
 // Register this context under the name "app"
 // The following function augments the passed object with a "call" function
@@ -64,10 +76,7 @@ var val = 7, // Plain variable
 	
 K.reg(my, 'myclass');
 
-// Livestyle
-Ti.App.Properties.setBool('_watching', false);
-Ti.include('tools/livestyle/livestyle.js');
-K.watch(win);
+
 
 
 // Force load

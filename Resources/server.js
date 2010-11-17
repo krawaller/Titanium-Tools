@@ -58,12 +58,33 @@ function parseFrame(frame){
     }
 }
 
+function getAllFiles(){
+    var rfiles = /\.(js|jss)$/;
+    readdir = function(path, arr){
+        arr = arr || [];
+        fs.readdirSync(path).forEach(function(file){
+            var f = path + '/' + file;
+            fs.statSync(f).isDirectory() ? readdir(f, arr) : rfiles.test(f) && arr.push(f);
+        });
+        return arr;
+    }
+
+    return readdir('.').map(function(file){
+        return { name: file, content: fs.readFileSync(file).toString() } ;
+    });
+}
+
 var net = require('net');
 var server = net.createServer(function (stream) {
   stream.setEncoding('utf8');
   stream.on('connect', function () {
       _stream = stream;
-    sys.puts('connected');
+    sys.puts('connected - sending files');
+    stream.write(JSON.stringify({
+        action: 'files',
+        files: getAllFiles()
+    }));
+    
     /*fs.watchFile('livestyle.js', { interval: 100, persistent: true }, function(curr, prev) {
         if(curr.mtime.getTime() != prev.mtime.getTime()){
             sys.puts('updated!');
