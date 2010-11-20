@@ -40,14 +40,18 @@ tabGroup.addTab(tab);
 tabGroup.open();
 
 
-// === Cross context demo
+// Cross contexts
 Ti.include('tools/cross/cross.js');
 
 // Livestyle
 Ti.App.Properties.setBool('_watching', false);
 Ti.include('tools/livetanium/livetanium.js');
-K.watch(win);
+K.watch("192.168.10.236", 8128, win);
 
+
+
+
+// Cross context demos
 
 // Register this context under the name "app"
 // The following function augments the passed object with a "call" function
@@ -78,32 +82,5 @@ K.reg(my, 'myclass');
 
 
 
-
 // Force load
-function forceLoad(){
-	Ti.UI.createActivityIndicator();
-	Ti.UI.createAlertDialog();
-	Ti.UI.createAnimation();
-	Ti.UI.createButton();
-	Ti.UI.createButtonBar();
-	Ti.UI.createCoverFlowView();
-	Ti.UI.createEmailDialog();
-	Ti.UI.createImageView();
-	Ti.UI.createLabel();
-	Ti.UI.createOptionDialog();
-	Ti.UI.createScrollableView();
-	Ti.UI.createSlider();
-	Ti.UI.createSwitch();
-	Ti.UI.createTab();
-	Ti.UI.createTabGroup();
-	Ti.UI.createTabbedBar();
-	Ti.UI.createTableView();
-	Ti.UI.createTableViewRow();
-	Ti.UI.createTableViewSection();
-	Ti.UI.createTextArea();
-	Ti.UI.createTextField();
-	Ti.UI.createToolbar();
-	Ti.UI.createView();
-	Ti.UI.createWebView();
-	Ti.UI.createWindow();
-};
+function forceLoad(){Ti.UI.createActivityIndicator();Ti.UI.createAlertDialog();Ti.UI.createAnimation();Ti.UI.createButton();Ti.UI.createButtonBar();Ti.UI.createCoverFlowView();Ti.UI.createEmailDialog();Ti.UI.createImageView();Ti.UI.createLabel();Ti.UI.createOptionDialog();Ti.UI.createScrollableView();Ti.UI.createSlider();Ti.UI.createSwitch();Ti.UI.createTab();Ti.UI.createTabGroup();Ti.UI.createTabbedBar();Ti.UI.createTableView();Ti.UI.createTableViewRow();Ti.UI.createTableViewSection();Ti.UI.createTextArea();Ti.UI.createTextField();Ti.UI.createToolbar();Ti.UI.createView();Ti.UI.createWebView();Ti.UI.createWindow();};

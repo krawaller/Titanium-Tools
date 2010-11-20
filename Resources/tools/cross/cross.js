@@ -1,11 +1,6 @@
 (function(global){
-	var K,
-		callbacks = {},
-		cid = 0,
-		me = this,
-		toString = Object.prototype.toString;
+var K = (global.K = global.K || {}), callbacks = {}, cid = 0, me = this, toString = Object.prototype.toString
 
-K = global.K = global.K || {};
 K.isFunc = function(o){ return toString.call(o) === "[object Function]"; };
 K.reg = function(obj, reglabel) {
 	var lb = '_' + reglabel;
@@ -17,12 +12,7 @@ K.reg = function(obj, reglabel) {
 		}
 		cid++;
 		callbacks[cid] = callback;
-		Ti.App.fireEvent('_' + label, {
-			method: method,
-			cid: callback ? cid : false,
-			source: reglabel,
-			data: data
-		});
+		Ti.App.fireEvent('_' + label, { method: method, cid: callback ? cid : false, source: reglabel, data: data });
 	};
 	
 	Ti.App.addEventListener(lb, function(e){
@@ -33,9 +23,7 @@ K.reg = function(obj, reglabel) {
 			}
 		} else {
 		    var i = 0, m = e.method.split("."), tmp, val, o = obj, os = [], fn = function(val){
-				if(e.cid){
-					Ti.App.fireEvent(e.source, { cid: e.cid, data: val, source: lb });
-				}
+				if(e.cid){ Ti.App.fireEvent(e.source, { cid: e.cid, data: val, source: lb }); }
 			};
 			
 		    while((tmp = o[m[i++]]) && (o = tmp) && os.push(o));
@@ -49,5 +37,4 @@ K.reg = function(obj, reglabel) {
 		}	
 	});
 };
-
 })(this);

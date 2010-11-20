@@ -11,7 +11,7 @@ button {
 .button1 {
 	right: 10;
 	top: 160;
-	title: Nice;
+	title: Krawaller rocks;
 }
 
 label {
@@ -27,7 +27,7 @@ label {
 }
 
 tableViewRow {
-    color: #00f;
+    color: #f0f;
 }
 
 .row1 {
