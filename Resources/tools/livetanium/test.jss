@@ -11,7 +11,7 @@ button {
 .button1 {
 	right: 10;
 	top: 160;
-	title: Krawaller rocks;
+	title: Krawaller;
 }
 
 label {

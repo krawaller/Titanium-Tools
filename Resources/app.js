@@ -20,10 +20,6 @@ var tableView = Ti.UI.createTableView({
 		file: 'tools/cross/demo.js'
 	},
 	{
-	    title: 'Live styles',
-	    file: 'tools/livestyle/demo.js'
-	},
-	{
 	    title: 'Livetanium',
 	    file: 'tools/livetanium/demo.js'
 	}]

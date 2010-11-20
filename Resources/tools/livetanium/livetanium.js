@@ -214,7 +214,6 @@ K.watch = function(host, port, win){
     // Use Krawaller's cross context library    
     K.reg(Watcher, '_watcher');
     
-    Ti.API.log('init socket');
     var socket = Titanium.Network.createTCPSocket({
     	hostName: host, 
     	port: port, 
@@ -230,6 +229,7 @@ K.watch = function(host, port, win){
                     break;
                 
                 case 'files': // Write all files to app tmp directory on startup
+                    Ti.API.info('Socket connected - receiving files');
                     o.files.forEach(function(f, i){
                         var name = f.name.replace(/\.\//, function($0){ return '';  }).replace(/\//g, '-'),
                             path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
@@ -238,8 +238,12 @@ K.watch = function(host, port, win){
                         h.write(f.content);
                     });
                     break;
+                    
+                case 'message':
+                    Ti.API.info('Socket message', o.message);
+                    break;
             }
-        } catch(e){ Ti.API.log('error', e); }
+        } catch(e){ Ti.API.error('error', e); }
     });
 
     // Cleanup
@@ -254,6 +258,7 @@ K.watch = function(host, port, win){
     }
 
     socket.connect();
+    socket.write(JSON.stringify({ action: 'echo', message: 'Socket connected' }));
 };
 
 var watching = {}, // Map of filenames currently being watched 
