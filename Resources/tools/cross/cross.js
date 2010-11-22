@@ -1,5 +1,5 @@
 (function(global){
-var K = (global.K = global.K || {}), callbacks = {}, cid = 0, me = this, toString = Object.prototype.toString
+var K = (global.K = global.K || {}), callbacks = {}, cid = 0, me = this, toString = Object.prototype.toString;
 
 K.isFunc = function(o){ return toString.call(o) === "[object Function]"; };
 K.reg = function(obj, reglabel) {
@@ -31,7 +31,7 @@ K.reg = function(obj, reglabel) {
 			((typeof (val = 
 				o.apply ? o.apply(
 					(os[os.length - 2] || obj), 
-					((tmp = (e.data ? (e.data instanceof Array ? e.data : [e.data]) : [])) && tmp.push(fn) && tmp.push(e) && tmp)
+					((tmp = (e.data ? (e.data instanceof Array ? e.data : [e.data]) : [])) && tmp.push(fn) && tmp.push(e) && tmp)
 				) : o(e.data[0], e.data[1], e.data[2])
 			) !== 'undefined') && fn(val))   : fn(o);
 		}	
