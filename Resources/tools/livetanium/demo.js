@@ -4,7 +4,7 @@ K.style('/tools/livetanium/test.jss');
 var win = Ti.UI.currentWindow;
 
 K.createButton({ title: 'Nice button!', className: 'button1' }).appendTo(win);
-K.createLabel({ text: 'A la', right: 5 }).appendTo(win);
+//K.createLabel({ text: 'A la', right: 5 }).appendTo(win);
 K.createLabel({ text: 'Wow label' }).appendTo(win);
 K.createTableView({ 
     className: 'tableView1', 

@@ -1,3 +1,4 @@
+//Ti.UI.createAlertDialog({ title: 'hej', message: 'ho' }).show();
 Ti.include('cross.js');
 
 // Register this context under the name "demo"
@@ -26,5 +27,5 @@ webview.addEventListener('load', function(){
 });
 
 // Let's try calling the myclass instance in app.js
-call('myclass', 'val',       function(p){ Ti.API.log('myclass val', p); }); // Should log [MYCLASS VAL] 3
+call('myclass', 'val', null, function(p){ Ti.API.log('myclass val', p); }); // Should log [MYCLASS VAL] 3
 call('myclass', 'plus', [1], function(p){ Ti.API.log('myclass plus',  p); }); // Should log [MYCLASS PLUS] 4

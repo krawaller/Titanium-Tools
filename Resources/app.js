@@ -25,7 +25,7 @@ var tableView = Ti.UI.createTableView({
 	}]
 });
 tableView.addEventListener('click', function(e){
-	tab.open(K.createWindow({
+	tab.open(Ti.UI.createWindow({
 		url: e.rowData.file,
 		title: e.rowData.title
 	}));
@@ -40,11 +40,9 @@ tabGroup.open();
 Ti.include('tools/cross/cross.js');
 
 // Livestyle
-Ti.App.Properties.setBool('_watching', false);
+/*Ti.App.Properties.setBool('_watching', false);
 Ti.include('tools/livetanium/livetanium.js');
-K.watch("192.168.10.236", 8128, win);
-
-
+K.watch("192.168.10.236", 8128, win);*/
 
 
 // Cross context demos

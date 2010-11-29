@@ -1,17 +1,17 @@
 window {
     barColor: #f00;
-    title: wow;
+    title: Title;
 }
 
 button {
-	width: 100;
+	width: 120;
 	height: 30;
 }
 
 .button1 {
 	right: 10;
 	top: 160;
-	title: Krawaller;
+	title: Hello world;
 }
 
 label {
