@@ -3,10 +3,10 @@
   This is a sweet collection of tools for [Appcelerator](http://www.appcelerator.com)'s [Titanium Mobile](http://github.com/appcelerator/titanium_mobile).
 
 ## Cross context calls
-  [A tiny library](Resources/tools/cross/) to simplify cross context calling. It less than a kb, and works for native contexts and webview contexts on both iPhone and Anroid. Go check it out!
+  [A tiny library](tree/master/Resources/tools/cross/) to simplify cross context calling. It less than a kb, and works for native contexts and webview contexts on both iPhone and Anroid. Go check it out!
 
 ## Livetanium
-  Made out of titanium, nodejs and unicorns, this library lets you code Titanium Mobile apps and see changes in realtime. It uses a nodejs server to pipe filechanges to the app, and these changes are applied in realtime. It iPhone only at the moment, but works in both the simulator and on the actual device. You can see [a quick walkthrough here](http://krawaller.se/livetanium.swf).
+  Made out of titanium, nodejs and unicorns, [this library](tree/master/Resources/tools/livetanium/) lets you code Titanium Mobile apps and see changes in realtime. It uses a nodejs server to pipe filechanges to the app, and these changes are applied in realtime. It iPhone only at the moment, but works in both the simulator and on the actual device. You can see [a quick walkthrough here](http://krawaller.se/livetanium.swf).
 
 LICENSE
 ---
