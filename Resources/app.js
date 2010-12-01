@@ -39,10 +39,13 @@ tabGroup.open();
 // Cross contexts
 Ti.include('tools/cross/cross.js');
 
-// Livestyle
-/*Ti.App.Properties.setBool('_watching', false);
-Ti.include('tools/livetanium/livetanium.js');
-K.watch("192.168.10.236", 8128, win);*/
+
+if(Titanium.Platform.name == 'iPhone OS'){ // No Android support yet
+    // Livestyle
+    Ti.App.Properties.setBool('_watching', false);
+    Ti.include('tools/livetanium/livetanium.js');
+    K.watch("192.168.10.236", 8128, win);
+}
 
 
 // Cross context demos

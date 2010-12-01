@@ -1,6 +1,6 @@
 window {
-    barColor: #f00;
-    title: Title;
+    barColor: #0a0;
+    title: Hello;
 }
 
 button {
@@ -9,9 +9,9 @@ button {
 }
 
 .button1 {
-	right: 10;
+	right: 30;
 	top: 160;
-	title: Hello world;
+	title: OMG;
 }
 
 label {

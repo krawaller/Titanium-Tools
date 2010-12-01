@@ -231,6 +231,14 @@ K.watch = function(host, port, win){
             var o = JSON.parse(e.data.text);
             switch(o.action){
                 case 'filechange': // Upon filechange, call all applicable listening contexts
+                    try {
+                        var name = o.file.replace(/^\.?\//, function($0){ return '';  }).replace(/\//g, '-'),
+                            path = Ti.Filesystem.tempDirectory.replace(/\/$/, ''),
+                            h = Ti.Filesystem.getFile(path, name);
+                        
+                        h.write(o.content);
+                    } catch(e) { Ti.API.error('file write error', e); }
+                    
                     Watcher.call(watchers[o.file], 'update', [o.content, o.file]);
                     break;
                 
@@ -249,11 +257,11 @@ K.watch = function(host, port, win){
                     Ti.API.info('Socket message', o.message);
                     break;
             }
-        } catch(e){ Ti.API.error('error', e); }
+        } catch(e){ Ti.API.error('read error', e); }
     });
 
     // Cleanup
-    win = win || Ti.UI.currentWindow;
+    win = win || Ti.UI.currentWindow;
     if(win){ 
         win.addEventListener('close', function(e) {
         	if (socket.isValid) {
@@ -279,7 +287,7 @@ var watching = {}, // Map of filenames currently being watched
             
                 case 'js':
                     Ti.API.log('Reloading', file);
-                    eval('try {' + content + '} catch(e){ Ti.API.error(e); }');
+                    eval('try {' + content + '} catch(e){ Ti.API.error("reloading error", e); }');
                     break;
             }
         }
@@ -320,13 +328,14 @@ K.regWatch = function(file){
 K.style = function(file, str){
     K.regWatch(file); // Listen for changes of file
     try {
-        var h = file && Ti.Filesystem.getFile(Ti.Filesystem.tempDirectory, file.substring(1).replace(/\//g, '-')),
-            tmp = h && h.exists && (h.read() || {}).text;
-        
-        // Get style string, either direct string, tempfile or original resource   
-        str = str || tmp || Ti.Filesystem.getFile(Titanium.Filesystem.resourcesDirectory, file).read().text;
+        if(!str){
+            var h = file && Ti.Filesystem.getFile(Ti.Filesystem.tempDirectory, file.substring(1).replace(/\//g, '-')),
+                tmp = h && h.exists && (h.read() || {}).text;
+                
+            str = tmp || Ti.Filesystem.getFile(Titanium.Filesystem.resourcesDirectory, file).read().text;
+        }
         var selectors = buildSelectorTree(str);
-        (selectors || []).forEach(function(sel){
+        (selectors || []).forEach(function(sel){
             var obj = styles[sel.selector] = styles[sel.selector] || {};
             sel.properties.forEach(function(prop){
                 obj[prop.property] = prop.value;
@@ -334,7 +343,7 @@ K.style = function(file, str){
         });
         
         K.refreshStyles(); // Refresh styles
-    } catch(e){ Ti.API.log('error', e); }
+    } catch(e){ Ti.API.log('style apply error', e); }
 };
 
 // Listen for changes to current window
