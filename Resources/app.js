@@ -22,6 +22,10 @@ var tableView = Ti.UI.createTableView({
 	{
 	    title: 'Livetanium',
 	    file: 'tools/livetanium/demo.js'
+	},
+	{
+	    title: 'Encode Image',
+	    file: 'tools/encodeImage/demo.js'
 	}]
 });
 tableView.addEventListener('click', function(e){
