@@ -1,0 +1,252 @@
+#!/Users/jaco/.nvm/latest/bin/node
+
+var sys   = require('sys'),
+	fs    = require('fs'),
+	args = require('argsparser').parse(),
+	path = require('path');
+	
+function extend(destination, source){
+	for (var property in source) { destination[property] = source[property]; }
+	return destination;
+}
+	
+var tmp, sdk, profile, certificate, remote, url, version;	
+if(Object.keys(args).length == 1 || args['-h'] || args['--help']){
+	sys.puts([
+		'',
+		'kota - Krawaller over-the-air manager for iOS 4.x',
+		'',
+		'    kota will merge the option arguments with the global settings specified',
+		'    as a JSON object with long keys (sdk, profile etc. ) in ~/.kota',
+		'',
+		'Usage: kota [options]',
+		'    -t, --tag           Version number (tag) to use, eg 0.5.1',
+		'    -s, --sdk           iOS SDK, eg 4.2',
+		'    -p, --profile       Provisioning profile hash, eg 57803551-1F84-3FFC-AF81-19C23854C707',
+		'    -c, --certificate   Cert string, eg Waller Jacob,C/=SE',
+		'    -r, --remote        Remote SSH url, eg user@host:/var/www/apps',
+		'    -u, --url           Url endpoint of above, eg www.example.com/apps',
+		''
+	].join('\n'));
+	
+	process.exit();
+} else {
+	var opts;
+	try { opts = JSON.parse(fs.readFileSync(process.env.HOME + '/.kota').toString()); } catch(e){ opts = {}; }
+	opts.version = args['-t'] || args['--tag'] || opts.version;
+	opts.sdk = args['-s'] || args['--sdk'] || opts.sdk;
+	opts.profile = args['-p'] || args['--profile'] || opts.profile;
+	opts.certificate = args['-c'] || args['--certificate'] || opts.certificate;
+	opts.remote = args['-r'] || args['--remote'] || opts.remote;
+	opts.url = args['-u'] || args['--url'] || opts.url;
+	
+	for(var prop in opts){
+		if(!opts[prop]){
+			error("Missing parameter: " + prop);
+			process.exit();
+		}
+	}
+}
+
+var growl = require('growl'),
+    exec  = require('child_process').exec,
+    xml2js = require('xml2js'),
+	async = require('async'),
+	plist = require('plist');
+
+
+while(fs.readdirSync('.').filter(function(f){ return f == 'tiapp.xml'; }).length == 0 && (process.chdir('..') || process.cwd() != '/'));
+var path = process.cwd();
+
+if(path == '/'){
+	error("Couldn't find any tiapp.xml");
+	process.exit();
+}
+
+var kotabuild = 'build/iphone/build/kota', build = path + '/' + kotabuild;
+
+String.prototype.esc = function(obj, func){
+    return this.replace(/\$\(([A-Za-z_]+)\)/g, function($0, $1){
+        return typeof obj[$1] != "undefined" ? (func ? func(obj[$1]) : obj[$1]) : $0;
+    });
+};
+
+String.prototype.quote = function(){
+	return '"' + this + '"';
+}
+
+String.prototype.trim = function(){
+	return this.replace(/^\s+|\s+$/g, '');
+};
+
+function error(msg){
+	console.log('[ERROR] ' + msg);
+	return msg;
+}
+
+function debug(msg){
+	console.log('[DEBUG] ' + msg);
+	growl.notify(msg);
+	return msg;	
+}
+
+function getAppInfo(callback){
+	var parser = new xml2js.Parser();
+	parser.addListener('end', function(result) {
+		callback(null, result);
+	});
+	parser.parseString(fs.readFileSync('tiapp.xml'));
+}
+
+async.waterfall([getAppInfo, checkVersions, bumpAppVersion, getTitaniumOptions, compile, getPlist, buildAndArchive, createFiles, uploadFiles], function(err, result){ console.log(result); });
+
+
+function checkVersions(app, callback){
+	if(isVersionNewer(opts.version, app.version)){
+		debug('pushing tag ' + opts.version);
+		callback(null, app, opts.version);
+	} else {
+		debug('specified version not newer: ' + opts.version + " <= " + app.version);
+	}
+}
+
+function checkGitVersion(callback){
+	exec('git tag', function (error, stdout, stderr) {
+			var latest = stdout.split(/[\r\n]/).shift();
+			if(latest){
+				callback(null, latest);
+			} else {
+				error('repo not tagged yet');
+			}
+		}
+	);    
+}
+
+function isVersionNewer(candidate, last){
+    var p1 = candidate.toString().split("."),
+        p2 = last.toString().split("."),
+		c1, c2;
+        
+    for(var i = 0, len = Math.max(p1.length, p2.length); i < len; i++){
+		c1 = parseInt(p1[i], 10);
+		c2 = parseInt(p2[i], 10) || 0;
+        if(c1 > c2){
+            return true;
+        } else if(c1 < c2){
+			return false;
+		}
+    }
+    return false;
+}
+
+function bumpAppVersion(app, newVersion, callback){
+	fs.writeFileSync('tiapp.xml', fs.readFileSync('tiapp.xml').toString().replace(/<version>[^<]*<\/version>/, '<version>'+newVersion+'</version>'));
+	callback(null, app);
+}
+
+function getTitaniumOptions(app, callback){
+	var parts, opts = {};
+	fs.readFileSync('build/iphone/project.xcconfig').toString().split(/[\r\n]/).forEach(function(row){
+		parts = row.split("=");
+		if(parts.length == 2){
+			opts[parts[0]] = parts[1].esc(opts);
+		}
+	});
+	callback(null, app, opts);
+}
+
+function compile(app, tiOpts, callback){
+
+	debug('compiling ' + app.name);	
+	var command = [
+		(tiOpts.TI_SDK_DIR + '/builder.py').quote(),
+		'distribute',
+		opts.sdk.quote(),
+		path.quote(),
+		app.id,
+		app.name.quote(),
+		opts.profile,
+		opts.certificate.quote(),
+		build.quote(),
+		'iphone'
+	].join(" "); 
+
+	exec(command, function (error, stdout, stderr) {
+		debug('compiling done');
+		callback(null, app, tiOpts);
+	});
+}
+
+function getPlist(app, tiOpts, callback) {
+    plist.parseFile('build/iphone/Info.plist',
+    function(err, obj) {
+        if (err) {
+            error(err);
+        }
+        callback(null, app, tiOpts, obj[0]);
+    });
+}
+
+function buildAndArchive(app, tiOpts, plist, callback){
+	try {
+		fs.mkdirSync(kotabuild, 0777);
+	} catch(e){ debug('kota dir exists'); }
+	
+	debug('build archive');
+	var command = [
+		'/usr/bin/xcrun',
+		'-sdk',
+		'iphoneos',
+		'PackageApplication',
+		'-v',
+		(path + '/build/iphone/build/Release-iphoneos/' + app.name + '.app').quote(),
+		'-o',
+		(build + '/' + app.name + '.ipa').quote(),
+		'--sign',
+		opts.certificate.quote(),
+		'--embed',
+		(process.env.HOME + '/Library/MobileDevice/Provisioning Profiles/' + opts.profile + '.mobileprovision').quote()
+	].join(" ");
+	
+	exec(command, function (error, stdout, stderr) {
+		debug('archive built');
+		callback(null, app, tiOpts, plist);
+	});
+}
+
+var manifestTemplate = '<?xml version="1.0" encoding="UTF-8"?>	<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">	<plist version="1.0">	<dict>		<key>items</key>		<array>			<dict>				<key>assets</key>				<array>					<dict>						<key>kind</key>						<string>software-package</string>						<key>url</key>						<string>$(ipa)</string>					</dict>				</array>				<key>metadata</key>				<dict>					<key>bundle-identifier</key>					<string>$(id)</string>					<key>bundle-version</key>					<string>$(bundleVersion)</string>					<key>kind</key>					<string>software</string>					<key>title</key>					<string>$(name)</string>				</dict>			</dict>		</array>	</dict>	</plist>',
+	indexTemplate = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">	<html xmlns="http://www.w3.org/1999/xhtml">	<head>	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">	<title>githooks - Beta Release</title>	<style type="text/css">	body {background:#fff;margin:0;padding:0;font-family:arial,helvetica,sans-serif;text-align:center;padding:10px;color:#333;font-size:16px;}	#container {width:300px;margin:0 auto;}	h1 {margin:0;padding:0;font-size:14px;}	p {font-size:13px;}	.link {background:#ecf5ff;border-top:1px solid #fff;border:1px solid #dfebf8;margin-top:.5em;padding:.3em;}	.link a {text-decoration:none;font-size:15px;display:block;color:#069;}		</style>	</head>	<body>		<div id="container">		<h1>iOS 4.0 Users:</h1>		<div class="link"><a href="itms-services://?action=download-manifest&url=$(manifest)">Tap Here to Install<br />$(name)<br />On Your Device</a></div>		<p><strong>Link didnt work?</strong><br />	Make sure youre visiting this page on your device, not your computer.</p>			</div>		</body>	</html>';
+function createFiles(app, tiOpts, plist, callback){
+	debug('creating files');
+	var baseUrl = opts.url + '/' + app.name + '/';
+	
+	var manifest = manifestTemplate.esc({
+		name: app.name,
+		id: app.id,
+		ipa: baseUrl + app.name + '.ipa',
+		bundleVersion: plist.CFBundleVersion
+	});
+	fs.writeFileSync(build + '/manifest.plist', manifest);
+	
+	var index = indexTemplate.esc({
+		name: app.name,
+		manifest: baseUrl + 'manifest.plist'
+	});
+	fs.writeFileSync(build + '/index.html', index);
+	debug('files created');
+	
+	callback(null, app, tiOpts, plist);
+}
+
+function uploadFiles(app, tiOpts, plist, callback){
+	debug('uploading files');
+	var command = 'rsync -ave ssh "$(path)/$(name).ipa" "$(path)/index.html" "$(path)/manifest.plist" $(remote)/githooks/'.esc({
+		path: build,
+		name: app.name,
+		remote: opts.remote
+	});
+
+	exec(command, function (error, stdout, stderr) {
+		debug('files uploaded');
+	});
+}

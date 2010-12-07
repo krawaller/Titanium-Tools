@@ -26,6 +26,10 @@ var tableView = Ti.UI.createTableView({
 	{
 	    title: 'Encode Image',
 	    file: 'tools/encodeImage/demo.js'
+	},
+	{
+	    title: 'htmlparser',
+	    file: 'tools/htmlparser/demo.js'
 	}]
 });
 tableView.addEventListener('click', function(e){
